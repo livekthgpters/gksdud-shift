@@ -10,7 +10,7 @@ import sys
 import time
 
 UPSTREAM = "codingnoye/gksdud"
-FORK = "livekthgpters/gksdud"
+FORK = "livekthgpters/gksdud-shift"
 TITLE = "Sync upstream "
 
 

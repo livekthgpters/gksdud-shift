@@ -241,7 +241,7 @@ extension AppDelegate {
         }
     }
     @objc func openSupport() { NSWorkspace.shared.open(URL(string: "https://fairy.hada.io/@gksdud")!) }
-    @objc func openProject() { NSWorkspace.shared.open(URL(string: "https://github.com/livekthgpters/gksdud")!) }
+    @objc func openProject() { NSWorkspace.shared.open(URL(string: "https://github.com/livekthgpters/gksdud-shift")!) }
     func refreshUpdates() {
         let release = updates.available
         tabButtons.last?.image = release == nil ? tabGlyph("?") : updateGlyph(NSSize(width: 24, height: 20), color: .controlAccentColor)

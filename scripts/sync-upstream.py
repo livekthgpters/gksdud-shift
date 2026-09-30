@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 UPSTREAM = "https://github.com/codingnoye/gksdud.git"
-FORK = "https://github.com/livekthgpters/gksdud.git"
+FORK = "https://github.com/livekthgpters/gksdud-shift.git"
 PROTECTED = (
     "ForkPolicy.swift", "ForkTests.swift", ".github/workflows/sync-upstream.yml",
     ".github/workflows/checks.yml", "scripts/check-fork.py", "scripts/validate.sh",

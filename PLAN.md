@@ -4,10 +4,10 @@
 
 ## 목표와 현재 상태
 
-원본 gksdud를 fork해서 Shift + Space 한영 전환을 추가한다. 이 Codex 채팅의 자동화로 매시간 원본 main의 새 변경을 확인하고, 내 기능을 유지한 채 병합한다. 충돌이 없고 빌드·검증을 통과한 경우에만 fork의 main을 갱신한다.
+원본 gksdud를 fork해서 Shift + Space 한영 전환을 추가한다. 이 Codex 채팅의 자동화로 매월 1일 한국 시간 10:17에 원본 main의 새 변경을 확인하고 내 기능을 유지한 채 병합한다. 충돌이 없고 빌드·검증을 통과한 경우에만 fork의 main을 갱신한다.
 
 - 원본: https://github.com/codingnoye/gksdud
-- Fork: https://github.com/livekthgpters/gksdud
+- Fork: https://github.com/livekthgpters/gksdud-shift
 - 로컬 경로: /Users/tkim/Documents/workspace/03-personal/gksdud-shift
 - 조사 기준 원본 커밋: `18b579a8f09bcbeb6dc8806bd66ee26c7b14ea65`
 - 기본 브랜치: `main`
@@ -53,7 +53,7 @@ GKSDUD_SIGN_MODE=ad-hoc bash build.sh
 
 ## 원본 변경 감지와 자동 병합
 
-`scripts/watch-upstream.py`를 이 Codex 채팅의 외부 자동화에서 매시간 실행한다. 원본과 fork의 main SHA를 확인하고 원본 커밋이 fork에 이미 포함되어 있으면 종료한다. 새 변경이 있을 때만 fork에 `repository_dispatch`의 `upstream_changed` 이벤트를 전송한다. 실행 환경은 Mac과 Codex가 실행 중이어야 하며, 꺼져 있던 시간의 변경은 다음 실행에서 확인한다.
+`scripts/watch-upstream.py`를 이 Codex 채팅의 외부 자동화에서 매월 1일 한국 시간 10:17에 실행한다. 원본과 fork의 main SHA를 확인하고 원본 커밋이 fork에 이미 포함되어 있으면 종료한다. 새 변경이 있을 때만 fork에 `repository_dispatch`의 `upstream_changed` 이벤트를 전송한다. 실행 환경은 Mac과 Codex가 실행 중이어야 하며, 꺼져 있던 시간의 변경은 다음 실행에서 확인한다.
 
 `.github/workflows/sync-upstream.yml`은 다음 이벤트와 수동 실행을 받는다. Fork Actions의 `schedule`은 사용하지 않아 예약 workflow의 60일 무활동 중단에 의존하지 않는다. 별도 `sync-status` 브랜치도 만들지 않는다.
 
@@ -90,7 +90,7 @@ Fork 전용 테스트·workflow가 병합 과정에서 없어지지 않았는지
 
 ## 외부 자동화 유지와 실패 알림
 
-Fork에서 Actions를 활성화하고 dispatch workflow가 기본 브랜치에 존재하는지 확인한다. 이 Codex 채팅의 자동화는 매시간 감지 스크립트를 실행한다. 변경이 없거나 병합이 진행 중이면 알리지 않고, 반영 완료·실패·사용자 조치가 필요한 경우에만 알린다. 감지 작업의 상태와 Actions 결과를 함께 확인한다.
+Fork에서 Actions를 활성화하고 dispatch workflow가 기본 브랜치에 존재하는지 확인한다. 이 Codex 채팅의 자동화는 매월 1일 한국 시간 10:17에 감지 스크립트를 실행한다. 변경이 없거나 병합이 진행 중이면 알리지 않고, 반영 완료·실패·사용자 조치가 필요한 경우에만 알린다. 감지 작업의 상태와 Actions 결과를 함께 확인한다.
 
 GitHub 계정의 Actions 실패 알림도 운영자가 설정할 수 있다. 알림 전달은 계정 설정과 Codex 실행 상태에 의존하므로 코드만 추가해서 이메일이나 상시 감지가 보장된다고 설명하지 않는다. Mac이 꺼져 있어도 감지하려면 같은 스크립트를 별도 상시 실행 환경으로 옮긴다.
 

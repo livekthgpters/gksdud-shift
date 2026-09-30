@@ -31,7 +31,7 @@ class WatchTests(unittest.TestCase):
 
     def run_record(self, status, conclusion=None):
         return {"display_title": watch.TITLE + UPSTREAM, "status": status, "conclusion": conclusion,
-                "html_url": "https://github.com/livekthgpters/gksdud/actions/runs/1"}
+                "html_url": "https://github.com/livekthgpters/gksdud-shift/actions/runs/1"}
 
     def test_current_fork_never_dispatches(self):
         for comparison in ("identical", "ahead"):

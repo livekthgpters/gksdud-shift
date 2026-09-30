@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   validate:
-    if: github.repository == 'livekthgpters/gksdud' && github.ref == 'refs/heads/main'
+    if: github.repository == 'livekthgpters/gksdud-shift' && github.ref == 'refs/heads/main'
     runs-on: macos-15
     timeout-minutes: 20
     outputs:

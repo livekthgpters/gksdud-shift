@@ -4,7 +4,7 @@
 
 ## 실행 구조
 
-이 Codex 채팅의 자동화가 매시간 `scripts/watch-upstream.py`를 실행한다. 원본 `codingnoye/gksdud`의 main 커밋이 fork `livekthgpters/gksdud`에 포함되어 있으면 종료한다. 새 변경이 있으면 `upstream_changed` dispatch를 보내 fork의 `Sync upstream` workflow를 실행한다.
+이 Codex 채팅의 자동화가 매월 1일 한국 시간 10:17에 `scripts/watch-upstream.py`를 실행한다. 원본 `codingnoye/gksdud`의 main 커밋이 fork `livekthgpters/gksdud-shift`에 포함되어 있으면 종료한다. 새 변경이 있으면 `upstream_changed` dispatch를 보내 fork의 `Sync upstream` workflow를 실행한다.
 
 Workflow는 임시 후보에서 원본을 병합하고 `scripts/validate.sh`로 검사한다. 통과한 후보의 Git bundle만 별도 반영 job에 전달한다. 읽기 전용 검증 job에는 쓰기 토큰을 전달하지 않는다. 반영 job은 검증한 SHA와 두 저장소의 이력을 확인하고 fork main에 일반 push한다. 원본에는 push하지 않는다.
 
@@ -27,7 +27,7 @@ python3 scripts/watch-upstream.py
 python3 scripts/watch-upstream.py --retry
 ```
 
-감지 상태는 `.local/upstream-watch.json`에 저장한다. 실행 중인 같은 원본 변경은 중복 호출하지 않는다. 실패한 SHA 조합은 재호출하지 않으며 원본 또는 fork main이 바뀌거나 `--retry`를 지정하면 다시 시도한다. Dispatch가 실행 목록에 나타나지 않으면 1시간 뒤 재전송한다.
+감지 상태는 `.local/upstream-watch.json`에 저장한다. 실행 중인 같은 원본 변경은 중복 호출하지 않는다. 실패한 SHA 조합은 재호출하지 않으며 원본 또는 fork main이 바뀌거나 `--retry`를 지정하면 다시 시도한다. Dispatch가 실행 목록에 나타나지 않고 1시간 이상 지났다면 다음 감지 실행에서 재전송한다.
 
 ## 운영과 복구
 
