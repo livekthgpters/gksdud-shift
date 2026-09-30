@@ -23,6 +23,7 @@ func runTestMode() -> Bool {
 
 func runSelfTest() {
     setbuf(stdout, nil)
+    runForkTests()
     do { try runSettingsReentrancyTests() } catch { fputs("Settings reentrancy tests failed: \(error)\n", stderr); exit(1) }
     do { try runShortcutRestoreTests() } catch { fputs("Shortcut tests failed: \(error)\n", stderr); exit(1) }
     runFeatureTests()
@@ -116,7 +117,7 @@ func runSelfTest() {
     let rightOption = CGEventFlags(rawValue: CGEventFlags.maskAlternate.rawValue | UInt64(NX_DEVICERALTKEYMASK))
     precondition(spaceCombo(flags: .maskControl) == spaceCombos[0] && spaceCombo(flags: [.maskCommand, .maskAlphaShift]) == spaceCombos[1]
         && spaceCombo(flags: rightOption) == spaceCombos[2], "Each combination is Space with one modifier on either side, whatever Caps Lock is")
-    precondition([[], .maskShift, [.maskControl, .maskAlternate], [.maskCommand, .maskAlternate], [.maskCommand, .maskShift]]
+    precondition([[], [.maskControl, .maskAlternate], [.maskCommand, .maskAlternate], [.maskCommand, .maskShift]]
         .allSatisfy { spaceCombo(flags: $0) == nil }, "Other modifier sets keep their meaning")
     var space = SpaceComboGate()
     func spaceKey(_ down: Bool, _ flags: CGEventFlags, repeatKey: Bool = false, chosen: [UInt64] = [spaceCombos[0], spaceCombos[2]]) -> (consume: Bool, switchNow: Bool) {

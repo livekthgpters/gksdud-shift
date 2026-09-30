@@ -482,7 +482,7 @@ func renderKeyboardUI(to directory: String) throws {
     let previewRelease = AppRelease(tag_name: "v9.0.0", html_url: "https://github.com/codingnoye/gksdud/releases/tag/v9.0.0", body: "## 요약\n- 설정을 일반·대소문자·특수문자·gksdud 탭으로 나눴습니다.\n- 한글에서도 Option 특수문자를 입력할 수 있습니다.\n- 새 버전이 나오면 메뉴에서 알려드립니다.\n\n## 설치\n요약에 나타나면 안 됩니다.", draft: false, prerelease: false)
     defaults.set(try JSONEncoder().encode(previewRelease), forKey: "updates.release")
     let delegate = AppDelegate(engine: engine)
-    delegate.updates = UpdateChecker(defaults: defaults)
+    delegate.updates = UpdateChecker(defaults: defaults, enabled: true)
     delegate.buildWindow()
     delegate.window.makeFirstResponder(nil)
     delegate.updateMenu()
@@ -542,13 +542,13 @@ func renderKeyboardUI(to directory: String) throws {
     delegate.showAbout()
     precondition(delegate.selectedTab == 3 && !delegate.updateButton.isHidden)
     precondition(!delegate.updateSummary.string.contains("요약에 나타나면"))
-    delegate.updates = UpdateChecker(defaults: defaults, installedVersion: "9.0.0")
+    delegate.updates = UpdateChecker(defaults: defaults, installedVersion: "9.0.0", enabled: true)
     delegate.refreshUpdates()
     precondition(delegate.tabButtons[3].accessibilityLabel() == "gksdud 탭" && delegate.updateButton.isHidden && updateEntry.isHidden)
     defaults.set(false, forKey: "active")
     delegate.resetSelection()
     // Right Control goes last: the screenshots and later checks start from it.
-    for (title, usage): (String, UInt64) in [("Ctrl ⌃ + Space ␣", spaceCombos[0]), ("Cmd ⌘ + Space ␣", spaceCombos[1]), ("Opt ⌥ + Space ␣", spaceCombos[2]),
+    for (title, usage): (String, UInt64) in [("Ctrl ⌃ + Space ␣", spaceCombos[0]), ("Cmd ⌘ + Space ␣", spaceCombos[1]), ("Opt ⌥ + Space ␣", spaceCombos[2]), ("Shift ⇧ + Space ␣", spaceCombos[3]),
                                           ("우측 Command ⌘", 0x7000000e7), ("우측 Option ⌥", 0x7000000e6),
                                           ("Caps Lock ⇪", 0x700000039), ("우측 Control ⌃", 0x7000000e4)] {
         delegate.picker.selectItem(withTitle: title)
@@ -570,6 +570,16 @@ func renderKeyboardUI(to directory: String) throws {
         try save(delegate.window.contentView!, "right-control-\(name).png")
     }
     print("PASS: source picker actions and saved selection for right Command, right Option, Caps Lock, right Control and Space combinations")
+    delegate.updates = UpdateChecker(defaults: defaults)
+    delegate.refreshUpdates()
+    precondition(delegate.updateButton.isHidden && delegate.checkUpdateButton.isHidden && updateEntry.isHidden)
+    precondition(delegate.updateStatus.stringValue == ForkPolicy.updateNotice)
+    delegate.selectTab(3)
+    for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", NSAppearance.Name.darkAqua)] {
+        delegate.window.appearance = NSAppearance(named: appearance)
+        try save(delegate.window.contentView!, "fork-about-\(name).png")
+    }
+    delegate.selectTab(0)
     // Caps Lock chosen as a Korean/English key while Caps Lock in Korean is on: the warning, then the tab once confirmed.
     // runCapsLockKeyTests checks the answers.
     defaults.set(true, forKey: "koreanCapsLock")

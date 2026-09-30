@@ -5,7 +5,7 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
-    branches: [main]
+    branches: [main, 'codex/**']
 
 permissions:
   contents: read
@@ -34,25 +34,9 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - name: Validate scripts
+      - name: Validate scripts, build Universal app and run self-tests
         shell: bash
-        run: |
-          set -euo pipefail
-          bash -n build.sh scripts/cleanup-signing.sh signing/setup-local-signing.sh signing/verify-update-identity.sh
-          ruby -c scripts/prepare-release.rb
-          ruby scripts/test_release.rb
-          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts -p test_update_tap.py
-          python3 scripts/run-with-timeout.py 2 /usr/bin/true
-          if python3 scripts/run-with-timeout.py 0.1 /bin/sleep 5; then
-            echo 'Timeout test unexpectedly succeeded' >&2
-            exit 1
-          else
-            test "$?" -eq 124
-          fi
-      - name: Build Universal app and run self-tests
-        env:
-          GKSDUD_SIGN_MODE: ad-hoc
-        run: bash build.sh
+        run: bash scripts/validate.sh
       - name: Diagnose a self-test crash
         if: failure()
         shell: bash

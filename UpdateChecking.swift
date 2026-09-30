@@ -63,23 +63,24 @@ final class UpdateChecker {
     typealias Fetch = (URLRequest, @escaping (Data?, URLResponse?, Error?) -> Void) -> Void
     let defaults: UserDefaults
     let installedVersion: String
+    let enabled: Bool
     let fetch: Fetch
     var now: () -> Date
     var onChange: (() -> Void)?
     private(set) var release: AppRelease?
     private(set) var checking = false
     private(set) var error: String?
-    var available: AppRelease? { release.flatMap { $0.isNewer(than: installedVersion) ? $0 : nil } }
+    var available: AppRelease? { enabled ? release.flatMap { $0.isNewer(than: installedVersion) ? $0 : nil } : nil }
     var lastChecked: Date? { defaults.object(forKey: "updates.lastSuccess") as? Date }
 
     init(defaults: UserDefaults, installedVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0",
-         now: @escaping () -> Date = Date.init,
+         enabled: Bool = ForkPolicy.upstreamUpdatesEnabled, now: @escaping () -> Date = Date.init,
          fetch: @escaping Fetch = { request, completion in URLSession.shared.dataTask(with: request, completionHandler: completion).resume() }) {
-        self.defaults = defaults; self.installedVersion = installedVersion; self.now = now; self.fetch = fetch
-        if let data = defaults.data(forKey: "updates.release") { release = try? JSONDecoder().decode(AppRelease.self, from: data) }
+        self.defaults = defaults; self.installedVersion = installedVersion; self.enabled = enabled; self.now = now; self.fetch = fetch
+        if enabled, let data = defaults.data(forKey: "updates.release") { release = try? JSONDecoder().decode(AppRelease.self, from: data) }
     }
     func check(force: Bool = false) {
-        guard !checking else { return }
+        guard enabled, !checking else { return }
         let date = now()
         if !force, let next = defaults.object(forKey: "updates.nextCheck") as? Date,
            next > date, next.timeIntervalSince(date) <= 86400 { return }
