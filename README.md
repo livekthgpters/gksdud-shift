@@ -64,6 +64,8 @@ brew install --cask codingnoye/tap/gksdud
 
 개발 환경과 빌드, 검증 방법은 [기여 안내](CONTRIBUTING.md)를 참고하세요.
 
+이 fork는 한영 키 목록에 **Shift + Space**를 추가합니다. 원본 변경 감지와 자동 병합, 수동 앱 설치 방법은 [fork 운영 안내](docs/upstream-sync.md)를 참고하세요. 원본 앱으로 자동 업데이트하는 기능은 비활성화되어 있습니다.
+
 ## 라이선스
 
 [MIT](LICENSE) ,  © 2026 CodingNoye ,  codingnoye@gmail.com

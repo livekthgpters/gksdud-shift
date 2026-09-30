@@ -1,0 +1,92 @@
+name: Sync upstream
+run-name: Sync upstream ${{ github.event.client_payload.upstream_sha || 'manual' }}
+
+on:
+  repository_dispatch:
+    types: [upstream_changed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.repository == 'livekthgpters/gksdud-shift' && github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 20
+    outputs:
+      changed: ${{ steps.prepare.outputs.changed }}
+      base: ${{ steps.prepare.outputs.base }}
+      upstream: ${{ steps.prepare.outputs.upstream }}
+      candidate: ${{ steps.prepare.outputs.candidate }}
+      artifact: ${{ steps.bundle.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Merge the current upstream main
+        id: prepare
+        # Dispatch payload is a notification only. The source URL/ref are fixed in the script.
+        run: python3 scripts/sync-upstream.py prepare
+      - name: Validate and bundle the exact candidate
+        if: steps.prepare.outputs.changed == 'true'
+        env:
+          BASE: ${{ steps.prepare.outputs.base }}
+          UPSTREAM: ${{ steps.prepare.outputs.upstream }}
+          CANDIDATE: ${{ steps.prepare.outputs.candidate }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: >-
+          python3 scripts/sync-upstream.py validate
+          --base "$BASE" --upstream "$UPSTREAM" --candidate "$CANDIDATE"
+          --bundle "$RUNNER_TEMP/candidate.bundle"
+      - name: Transfer only Git history to the publishing job
+        if: steps.prepare.outputs.changed == 'true'
+        id: bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: verified-candidate
+          path: ${{ runner.temp }}/candidate.bundle
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: validate
+    if: needs.validate.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          # Execute only the trusted pre-merge publishing script, never candidate build code.
+          ref: ${{ needs.validate.outputs.base }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.validate.outputs.artifact }}
+          path: ${{ runner.temp }}/verified
+          merge-multiple: true
+      - name: Publish the validated candidate without force
+        env:
+          BASE: ${{ needs.validate.outputs.base }}
+          UPSTREAM: ${{ needs.validate.outputs.upstream }}
+          CANDIDATE: ${{ needs.validate.outputs.candidate }}
+          GH_SYNC_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          authorization=$(printf 'x-access-token:%s' "$GH_SYNC_TOKEN" | base64 | tr -d '\n')
+          echo "::add-mask::$authorization"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.https://github.com/.extraheader
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $authorization"
+          python3 scripts/sync-upstream.py publish \
+            --base "$BASE" --upstream "$UPSTREAM" --candidate "$CANDIDATE" \
+            --bundle "$RUNNER_TEMP/verified/candidate.bundle"

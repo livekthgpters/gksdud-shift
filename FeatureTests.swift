@@ -34,7 +34,7 @@ func runFeatureTests() {
     defer { defaults.removePersistentDomain(forName: suite) }
     var now = Date(timeIntervalSince1970: 100_000), requests = 0
     var completion: ((Data?, URLResponse?, Error?) -> Void)?
-    let checker = UpdateChecker(defaults: defaults, installedVersion: "1.2.0", now: { now }, fetch: { request, done in
+    let checker = UpdateChecker(defaults: defaults, installedVersion: "1.2.0", enabled: true, now: { now }, fetch: { request, done in
         requests += 1; completion = done
         featureCheck(request.url?.host == "api.github.com" && request.timeoutInterval == 20)
     })
@@ -47,9 +47,9 @@ func runFeatureTests() {
     checker.check(); featureCheck(requests == 1)
     now += 86401; checker.check(); featureCheck(requests == 2)
     respond(503, nil); featureCheck(checker.available != nil && checker.error != nil, "Offline checks preserve cached notification")
-    let relaunched = UpdateChecker(defaults: defaults, installedVersion: "1.2.0")
+    let relaunched = UpdateChecker(defaults: defaults, installedVersion: "1.2.0", enabled: true)
     featureCheck(relaunched.available != nil)
-    let upgraded = UpdateChecker(defaults: defaults, installedVersion: "1.3.0")
+    let upgraded = UpdateChecker(defaults: defaults, installedVersion: "1.3.0", enabled: true)
     featureCheck(upgraded.available == nil)
     checker.check(force: true); respond(200, Data("{}".utf8)); featureCheck(checker.error != nil && checker.available != nil)
     checker.check(force: true); respond(200, try! JSONEncoder().encode(release(nil, tag: "v1.2.0")))
@@ -707,7 +707,7 @@ func runPrereleaseTests() {
     let preview = AppRelease(tag_name: tag, html_url: "https://github.com/codingnoye/gksdud/releases/tag/\(tag)", body: nil, draft: false, prerelease: true)
     featureCheck(!preview.isNewer(than: "1.2.0"))
     var completion: ((Data?, URLResponse?, Error?) -> Void)?
-    let checker = UpdateChecker(defaults: defaults, installedVersion: "1.2.0", fetch: { request, done in
+    let checker = UpdateChecker(defaults: defaults, installedVersion: "1.2.0", enabled: true, fetch: { request, done in
         featureCheck(request.url?.path == "/repos/codingnoye/gksdud/releases/latest" && request.url?.query == nil)
         completion = done
     })

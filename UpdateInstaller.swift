@@ -210,6 +210,7 @@ final class UpdateInstaller: @unchecked Sendable {
     func clearStatus() { if !busy { status = "" } }
     func fail(_ error: Error) { busy = false; status = error.localizedDescription; onChange?() }
     func start(_ release: AppRelease) {
+        guard ForkPolicy.upstreamUpdatesEnabled else { fail(UpdateFailure(ForkPolicy.updateNotice)); return }
         guard !busy else { return }
         let installed = Bundle.main.bundleURL.resolvingSymlinksInPath()
         do {
@@ -266,6 +267,7 @@ final class UpdateInstaller: @unchecked Sendable {
         try FileManager.default.moveItem(at: temporary, to: destination)
     }
     static func launchHelper(_ update: PreparedUpdate) throws {
+        guard ForkPolicy.upstreamUpdatesEnabled else { throw UpdateFailure(ForkPolicy.updateNotice) }
         guard let executable = Bundle.main.executableURL else { throw UpdateFailure("업데이트 도우미를 실행하지 못했습니다.") }
         let helper = Process(); helper.executableURL = executable
         helper.arguments = ["--install-update", update.directory.path, update.candidate.path, update.version, String(getpid())]
@@ -273,6 +275,7 @@ final class UpdateInstaller: @unchecked Sendable {
         try helper.run()
     }
     static func runHelper(_ arguments: [String]) throws {
+        guard ForkPolicy.upstreamUpdatesEnabled else { throw UpdateFailure(ForkPolicy.updateNotice) }
         guard arguments.count == 6, let parent = pid_t(arguments[5]), parent > 1 else { throw UpdateFailure("잘못된 업데이트 요청입니다.") }
         let workspace = URL(fileURLWithPath: arguments[2]).standardizedFileURL
         let candidate = URL(fileURLWithPath: arguments[3]).standardizedFileURL
